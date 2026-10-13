@@ -5,13 +5,18 @@ machine, against the published image. Two files, no dependencies beyond Python 3
 and Docker, and nothing here needs the engine's source.
 
 ```bash
-docker run -d -p 8080:8080 -v "$PWD/data:/data" hilliance/hilliance
+docker run -d -p 8080:8080 -v hilliance-data:/data hilliance/hilliance
 python3 gen.py --count 200000 --out products.jsonl
 python3 bench.py --objects products.jsonl --json results/mine.json
 ```
 
 That is the whole thing. `gen.py` writes a synthetic catalogue, `bench.py`
 learns it and times a set of queries through the ordinary HTTP API.
+
+> **A named volume, not a host directory.** The image runs as uid 10001, so a
+> bind mount like `-v "$PWD/data:/data"` is not writable by the server on Linux
+> and the first upload fails with `Permission denied`. macOS hides this; CI does
+> not. Use a named volume, or `chown 10001:999` the directory first.
 
 ## Why this repository exists
 

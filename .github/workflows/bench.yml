@@ -25,7 +25,7 @@ jobs:
 
       - name: Start Hilliance
         run: |
-          docker run -d --name hilliance -p 8080:8080 -v "$PWD/data:/data" hilliance/hilliance
+          docker run -d --name hilliance -p 8080:8080 -v hilliance-bench-data:/data hilliance/hilliance
           for i in $(seq 1 90); do
             curl -sf localhost:8080/health >/dev/null && break
             sleep 2

@@ -68,8 +68,11 @@ class Client:
             sys.exit("%s %s → HTTP %d\n%s" % (method, path, e.code, detail[:800]))
         except OSError as e:
             # a broken pipe usually means the server answered and hung up mid-upload
-            sys.exit("%s %s → %s\nThe server closed the connection. Its log usually says why:\n"
-                     "  docker logs <container> | tail -30" % (method, path, e))
+            sys.exit("%s %s → %s\nThe server closed the connection. Two usual causes:\n"
+                     "  1. /data is a bind mount the server cannot write to (it runs as uid 10001).\n"
+                     "     Use a named volume: -v hilliance-data:/data\n"
+                     "  2. something else; the server's log will say:\n"
+                     "     docker logs <container> | tail -30" % (method, path, e))
 
     def get(self, path):
         return self._req("GET", path)
