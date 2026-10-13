@@ -1,6 +1,6 @@
 name: benchmark
 
-# Runs the same two commands the README gives, on GitHub's own hardware, so the
+# Runs the same commands the README gives, on GitHub's own hardware, so the
 # numbers in results/ are not only ours. The artifact is the raw JSON.
 on:
   workflow_dispatch:
@@ -11,33 +11,55 @@ on:
   schedule:
     - cron: "17 5 * * 1"
 
+defaults:
+  run:
+    # without pipefail a failing benchmark piped into tee reports success
+    shell: bash -euo pipefail {0}
+
 jobs:
   bench:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+
       - name: Start Hilliance
         run: |
           docker run -d --name hilliance -p 8080:8080 -v "$PWD/data:/data" hilliance/hilliance
-          for i in $(seq 1 60); do
+          for i in $(seq 1 90); do
             curl -sf localhost:8080/health >/dev/null && break
             sleep 2
           done
           curl -s localhost:8080/health
+          echo
+
       - name: Generate the population
         run: python3 gen.py --count "${{ github.event.inputs.objects || '200000' }}" --out products.jsonl
+
       - name: Measure
-        run: python3 bench.py --objects products.jsonl --json "results/ci-$(date +%Y%m%d).json" | tee summary.txt
-      - name: Summarise
         run: |
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat summary.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          python3 bench.py --objects products.jsonl \
+            --json "results/ci-$(date +%Y%m%d-%H%M).json" | tee summary.txt
+
+      - name: Summarise
+        if: always()
+        run: |
+          {
+            echo '### Benchmark'
+            echo '```'
+            cat summary.txt 2>/dev/null || echo "(the run produced no table)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Server log
+        if: always()
+        run: docker logs hilliance 2>&1 | tail -40
+
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: benchmark-results
-          path: results/*.json
-      - name: Server log on failure
-        if: failure()
-        run: docker logs hilliance | tail -50
+          path: |
+            results/*.json
+            summary.txt
+          if-no-files-found: warn

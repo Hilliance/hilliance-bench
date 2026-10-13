@@ -56,10 +56,20 @@ class Client:
         r = urllib.request.Request(url, data=data, method=method)
         if data is not None:
             r.add_header("Content-Type", ctype)
+            r.add_header("Content-Length", str(len(data)))
         if self.key:
             r.add_header("Authorization", "Bearer " + self.key)
-        with urllib.request.urlopen(r, timeout=self.timeout) as resp:
-            return json.loads(resp.read() or b"{}")
+        try:
+            with urllib.request.urlopen(r, timeout=self.timeout) as resp:
+                return json.loads(resp.read() or b"{}")
+        except urllib.error.HTTPError as e:
+            # the server's own words are far more useful than a stack trace
+            detail = (e.read() or b"").decode("utf-8", "replace").strip()
+            sys.exit("%s %s → HTTP %d\n%s" % (method, path, e.code, detail[:800]))
+        except OSError as e:
+            # a broken pipe usually means the server answered and hung up mid-upload
+            sys.exit("%s %s → %s\nThe server closed the connection. Its log usually says why:\n"
+                     "  docker logs <container> | tail -30" % (method, path, e))
 
     def get(self, path):
         return self._req("GET", path)
