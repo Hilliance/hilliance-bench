@@ -1,0 +1,43 @@
+name: benchmark
+
+# Runs the same two commands the README gives, on GitHub's own hardware, so the
+# numbers in results/ are not only ours. The artifact is the raw JSON.
+on:
+  workflow_dispatch:
+    inputs:
+      objects:
+        description: objects to generate
+        default: "200000"
+  schedule:
+    - cron: "17 5 * * 1"
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start Hilliance
+        run: |
+          docker run -d --name hilliance -p 8080:8080 -v "$PWD/data:/data" hilliance/hilliance
+          for i in $(seq 1 60); do
+            curl -sf localhost:8080/health >/dev/null && break
+            sleep 2
+          done
+          curl -s localhost:8080/health
+      - name: Generate the population
+        run: python3 gen.py --count "${{ github.event.inputs.objects || '200000' }}" --out products.jsonl
+      - name: Measure
+        run: python3 bench.py --objects products.jsonl --json "results/ci-$(date +%Y%m%d).json" | tee summary.txt
+      - name: Summarise
+        run: |
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat summary.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: results/*.json
+      - name: Server log on failure
+        if: failure()
+        run: docker logs hilliance | tail -50

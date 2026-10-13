@@ -1,0 +1,96 @@
+{
+ "space": "bench",
+ "objects": 200000,
+ "limit": 10,
+ "repeat": 31,
+ "warmup": 5,
+ "learn_seconds": null,
+ "health": {
+  "auth": "open",
+  "embedder": "model2vec/256#a012e6bc8928e871",
+  "embedders": [
+   {
+    "dim": 256,
+    "id": "model2vec/256#a012e6bc8928e871",
+    "name": "model"
+   }
+  ],
+  "incompatible_spaces": [],
+  "last_refresh_seconds_ago": null,
+  "nodes": null,
+  "outdated_spaces": [],
+  "role": "writer",
+  "share": [],
+  "simd": "dotprod",
+  "spaces": 1,
+  "status": "ok"
+ },
+ "results": [
+  {
+   "query": "exact type",
+   "engine_us": 23,
+   "client_us": 1092.792022973299,
+   "blocks_scanned": 1,
+   "blocks_total": 196,
+   "matches": 10
+  },
+  {
+   "query": "type + colour + capacity",
+   "engine_us": 22,
+   "client_us": 834.2079818248749,
+   "blocks_scanned": 2,
+   "blocks_total": 196,
+   "matches": 10
+  },
+  {
+   "query": "values never seen",
+   "engine_us": 23,
+   "client_us": 901.8329437822104,
+   "blocks_scanned": 1,
+   "blocks_total": 196,
+   "matches": 10
+  },
+  {
+   "query": "rich, eight properties",
+   "engine_us": 369,
+   "client_us": 1266.8329291045666,
+   "blocks_scanned": 63,
+   "blocks_total": 196,
+   "matches": 10
+  },
+  {
+   "query": "numbers only",
+   "engine_us": 384,
+   "client_us": 1194.4579891860485,
+   "blocks_scanned": 103,
+   "blocks_total": 196,
+   "matches": 10
+  },
+  {
+   "query": "weak evidence",
+   "engine_us": 17,
+   "client_us": 865.9998420625925,
+   "blocks_scanned": 1,
+   "blocks_total": 196,
+   "matches": 10
+  },
+  {
+   "query": "cross-unit, cross-spelling",
+   "engine_us": 23,
+   "client_us": 833.375146612525,
+   "blocks_scanned": 2,
+   "blocks_total": 196,
+   "matches": 10
+  },
+  {
+   "query": "filtered: in stock, 10–25",
+   "engine_us": 32,
+   "client_us": 885.4579646140337,
+   "blocks_scanned": 3,
+   "blocks_total": 196,
+   "matches": 10,
+   "filtered": true
+  }
+ ],
+ "generated": "2026-10-13T11:07:37+0200"
+}
